@@ -118,4 +118,15 @@ up 轴由训练相机的 y 轴平均自动估计（NeRF 合成数据图像均为
 
 ## Task 3: Compare with the Official 3DGS Implementation
 
+[gaussian-splatting](assignment4/gaussian-splatting)为官方的3D Gaussian Splatting
+Task3是在google colab中完成的。
 
+```bash
+# 在colab克隆仓库
+git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
+```
+
+```bash
+# 
+!python /content/drive/MyDrive/gaussian-splatting/train.py -s /content/drive/MyDrive/gaussian-splatting/chair --eval
+```
