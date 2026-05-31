@@ -55,7 +55,7 @@ conda activate pyto
 | Opacity o | 标量 |
 | Color c | RGB 三通道 |
 
-已在 [gaussian_model.py#L103](gaussian_model.py#L103) 中由四元数和缩放参数构造 **3D 协方差矩阵**。
+已在 gaussian_model.py 中由四元数和缩放参数构造 **3D 协方差矩阵**。
 
 ### 2.2 Project 3D Gaussians to 2D
 
@@ -66,7 +66,7 @@ conda activate pyto
 
 投影后的 2D 协方差为 $\Sigma' = J W \Sigma W^T J^T$。
 
-已在 [gaussian_renderer.py#L26](gaussian_renderer.py#L26) 中实现 3D → 2D 投影。
+已在 gaussian_renderer.py中实现 3D → 2D 投影。
 
 ### 2.3 Compute 2D Gaussian Values
 
@@ -78,7 +78,7 @@ $$
 
 其中 **μᵢ** 与 **Σᵢ** 为投影后的 2D 高斯中心与协方差。
 
-已在 [gaussian_renderer.py#L61](gaussian_renderer.py#L61) 中计算 Gaussian 取值。
+已在gaussian_renderer.py中计算 Gaussian 取值。
 
 ### 2.4 Volume Rendering via α-blending
 
@@ -90,7 +90,7 @@ $$
 
 最终像素颜色由各高斯按 α-blending 累加（paper 公式 1-3）。
 
-已在 [gaussian_renderer.py#L83](gaussian_renderer.py#L83) 中实现最终渲染。
+已在 gaussian_renderer.py中实现最终渲染。
 
 ### Train your 3DGS
 
@@ -102,7 +102,7 @@ python train.py --colmap_dir data/chair --checkpoint_dir data/chair/checkpoints
 
 ### Render a Multi-view Video (Optional)
 
-训练完成后，可用 [render_3dgs_mv.py](render_3dgs_mv.py) 沿一个绕场景中心的**水平圆轨迹**渲染一段连续视角视频，便于直观检查重建质量：
+训练完成后，用 render_3dgs_mv.py沿一个绕场景中心的**水平圆轨迹**渲染一段连续视角视频，便于直观检查重建质量：
 
 ```bash
 python render_3dgs_mv.py \
