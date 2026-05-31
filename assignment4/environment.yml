@@ -1,0 +1,30 @@
+﻿name: pyto
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+
+# Linux CUDA environment for this 3DGS assignment.
+# Create with: conda env create -f environment.yml
+# RTX 4090D is supported through the CUDA 12.1 PyTorch build below.
+dependencies:
+  - python=3.10
+  - pip
+  - git
+  - cmake
+  - ninja
+  - numpy=1.26
+  - opencv
+  - tqdm
+  - natsort
+  - pyyaml
+  - fvcore
+  - iopath
+  - pytorch=2.3.1
+  - torchvision=0.18.1
+  - pytorch-cuda=12.1
+  - cuda-toolkit=12.1
+  - pip:
+      # PyTorch3D is required by gaussian_model.py/data_utils.py.
+      - git+https://github.com/facebookresearch/pytorch3d.git@stable
