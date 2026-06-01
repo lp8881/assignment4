@@ -130,3 +130,81 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 # 
 !python /content/drive/MyDrive/gaussian-splatting/train.py -s /content/drive/MyDrive/gaussian-splatting/chair --eval
 ```
+## 实验设置
+
+| 项目 | 简化版 PyTorch 3DGS | 官方 3DGS |
+|---|---|---|
+| 数据集 | `data/chair` | `gaussian-splatting/chair`，与 `data/chair` 同为 100 张 chair 多视角图像 |
+| 输入图像 | 原始图像为 800 x 800 RGBA，训练时下采样 8 倍，约 100 x 100 | `resolution=-1`，使用原始分辨率 |
+| 训练视图 | 100 张图像 | `--eval` 模式，约 87 张 train views 和 13 张 test views |
+| 初始点云 | COLMAP 稀疏点云，约 13,556 个点 | 同源 COLMAP 点云初始化 |
+| 最终高斯数量 | 固定为初始点数附近，未做 densification | 30,000 iter 后为 370,042 个高斯 |
+| 主要输出 | `data/chair/checkpoints/` | `gaussian-splatting/output/7dc68038-2/` |
+
+需要注意的是，两者的训练分辨率和 train/test 划分并不完全一致，因此当前结果更适合作为实现差异的实验观察。若需要严格公平的数值比较，应在相同 GPU、相同分辨率、相同 train/test split 下重新运行两套代码。
+
+## 渲染质量对比
+
+官方 3DGS 已经完成 `train.py`、`render.py` 和 `metrics.py` 三步，指标文件为 `gaussian-splatting/output/7dc68038-2/results.json`。在 `ours_30000` 下得到的测试集指标如下：
+
+| 方法 | PSNR ↑ | SSIM ↑ | LPIPS ↓ |
+|---|---:|---:|---:|
+| 官方 3DGS, 30,000 iter | 4.3386 | 0.2383 | 0.2928 |
+| 简化版 PyTorch 3DGS | 暂未计算 | 暂未计算 | 暂未计算 |
+
+从已有可视化结果看，简化版 PyTorch 3DGS 能够在训练视角上重建出椅子的主体形状、颜色和大致轮廓，但细节较模糊，边缘存在扩散和破碎现象。官方 3DGS 的局部物体细节更丰富，例如椅背、椅腿和绿色纹理保留得更清楚；但当前这次官方实验在背景区域出现了明显的白色或灰色 floaters，导致黑色背景与渲染结果差异很大，因此 PSNR 和 SSIM 被显著拉低。
+
+简化版最终 debug 图：
+
+![Simplified PyTorch 3DGS debug result](data/chair/checkpoints/debug_images/epoch_0199.png)
+
+官方 3DGS 测试视角示例：
+
+| Ground Truth | Official 3DGS Render |
+|---|---|
+| ![Official GT](gaussian-splatting/output/7dc68038-2/test/ours_30000/gt/00000.png) | ![Official render](gaussian-splatting/output/7dc68038-2/test/ours_30000/renders/00000.png) |
+
+官方 3DGS 在 TensorBoard 中记录的 test PSNR 在 7,000 iter 时约为 13.07 dB，但 30,000 iter 时降至约 4.34 dB。这说明在本数据设置下，后期 densification 和优化可能引入了较多背景区域的高斯 floaters。由于 chair 数据集的 PNG 带 alpha 通道，背景区域的处理方式会对指标造成较大影响；当前官方配置中 `white_background=False`，即使用黑色背景合成。
+
+## 训练速度对比
+
+根据当前保存的文件时间戳和官方 TensorBoard 日志，可以得到如下粗略速度统计：
+
+| 方法 | 训练规模 | 训练耗时 | 平均速度 |
+|---|---:|---:|---:|
+| 简化版 PyTorch 3DGS | 200 epochs，约 20,000 次图像更新 | 约 174.7 min | 约 524 ms / update |
+| 官方 3DGS | 30,000 iterations | 约 20.54 min | TensorBoard 最后 100 次约 34.0 ms / iter |
+
+简化版 PyTorch 3DGS 的训练时间由 `checkpoint_000000.pt` 到 `epoch_0199.png` 的时间戳粗略估计：从 2026-05-29 20:07:02 到 2026-05-29 23:01:44，约 174.7 分钟。官方 3DGS 的训练时间由 TensorBoard 事件中首个和最后一个 `iter_time` 记录估计，约为 20.54 分钟。
+
+即使官方实现使用了更高图像分辨率，并且最终高斯数量增长到 370,042 个，它的单次迭代速度仍明显快于简化版。这主要来自官方 CUDA rasterizer、tile-based 并行渲染、可见性裁剪和更高效的显存访问。相比之下，简化版使用纯 PyTorch 在图像平面上直接计算高斯贡献，接近对所有高斯和所有像素做全量计算，计算复杂度和中间张量开销都较大。
+
+## 显存占用对比
+
+当前实验文件中没有保存两种方法的峰值显存记录，因此无法给出严格的显存数值对比。就实现方式而言，二者的显存占用来源不同：
+
+| 方法 | 显存占用特点 |
+|---|---|
+| 简化版 PyTorch 3DGS | 没有 adaptive densification，高斯数量较少；但渲染时会在 PyTorch 中构造大量像素级中间张量，显存效率较低 |
+| 官方 3DGS | 高斯数量通过 densification 增长很多；但渲染核心由 CUDA kernel 实现，并采用 tile-based rasterization、排序和裁剪，避免了大量无效像素计算 |
+
+因此，简化版虽然高斯数量少，但未必具有更好的显存效率；官方实现虽然高斯数量更多，但其 rasterizer 对显存访问和并行计算做了专门优化。若补充显存实验，应在训练时记录 `nvidia-smi` 的峰值 `memory.used`，或在代码中记录 `torch.cuda.max_memory_allocated()`。
+
+## 差异来源分析
+
+两种实现的差异主要来自以下几个方面。
+
+首先，官方 3DGS 使用专门的 CUDA rasterizer，并采用 tile-based rendering。它会先判断每个 Gaussian 会影响哪些 tile 和像素，再进行排序、混合和裁剪，避免对整张图像做全量计算。简化版 PyTorch 实现则更接近直接投影全部 Gaussian，并在像素网格上计算 2D Gaussian 值和 alpha blending，因此速度较慢，中间显存开销也更大。
+
+其次，官方实现包含 adaptive Gaussian densification 和 pruning。训练过程中，高梯度区域会被克隆或拆分出更多 Gaussian，从而表达细节和边缘结构。本实验中官方模型从初始稀疏点云增长到 370,042 个 Gaussian。简化版没有 densification，只能依赖 COLMAP 初始稀疏点，因此对椅子纹理、细边缘和遮挡区域的表达能力有限。
+
+第三，官方 3DGS 使用球谐函数表示视角相关颜色，并优化 opacity、scale、rotation、position 等参数；简化版主要使用 RGB 颜色和基础的 3D covariance 投影，外观表达能力更弱。官方损失中还结合了 L1 和 SSIM，而简化版主要使用 RGB L1 loss。
+
+最后，当前官方实验出现了明显背景 floaters，这可能与透明背景图像、COLMAP 稀疏点云、无显式物体 mask 以及后期 densification 有关。由于评价指标会统计整张图像，背景区域的大面积错误会严重影响 PSNR 和 SSIM。因此，本次官方 3DGS 虽然在物体局部细节上更强，但最终量化指标并没有体现出预期优势。
+
+## 小结
+
+总体来看，官方 3DGS 在算法完整性和工程效率上明显优于本作业的纯 PyTorch 简化版。官方实现借助 CUDA tile-based rasterizer、adaptive densification、球谐颜色和更高效的优化流程，在训练速度和细节表达上具有明显优势。简化版的优势是结构清晰，便于理解 3D Gaussian 初始化、投影、2D Gaussian 计算和 alpha blending 的基本流程，但由于缺少 densification 和高性能 rasterizer，训练速度、显存效率和最终渲染质量都受到限制。
+
+当前报告仍缺少严格的峰值显存数值，以及简化版在相同 test split 上的 PSNR、SSIM、LPIPS 指标。若后续补充这两部分，Task 3 的定量比较会更加完整。
+
