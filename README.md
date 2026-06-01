@@ -127,10 +127,13 @@ Task3是在google colab中完成的。
 git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 ```
 
-```bash
-# 
+```bash 
 !python /content/drive/MyDrive/gaussian-splatting/train.py -s /content/drive/MyDrive/gaussian-splatting/chair --eval
+!python /content/drive/MyDrive/gaussian-splatting/render.py -m /content/drive/MyDrive/gaussian-splatting/output/7dc68038-2
+!python /content/drive/MyDrive/gaussian-splatting/metrics.py -m /content/drive/MyDrive/gaussian-splatting/output/7dc68038-2
 ```
+具体运行过程：
+
 ### 实验设置
 
 | 项目 | 简化版 PyTorch 3DGS | 官方 3DGS |
