@@ -132,7 +132,6 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 !python /content/drive/MyDrive/gaussian-splatting/render.py -m /content/drive/MyDrive/gaussian-splatting/output/7dc68038-2
 !python /content/drive/MyDrive/gaussian-splatting/metrics.py -m /content/drive/MyDrive/gaussian-splatting/output/7dc68038-2
 ```
-具体运行过程：
 
 ### 实验设置
 
