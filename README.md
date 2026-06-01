@@ -120,6 +120,7 @@ up 轴由训练相机的 y 轴平均自动估计（NeRF 合成数据图像均为
 
 [gaussian-splatting](assignment4/gaussian-splatting)为官方的3D Gaussian Splatting
 Task3是在google colab中完成的。
+<img width="1048" height="583" alt="image" src="https://github.com/user-attachments/assets/6a8ab560-b6df-4cde-ad90-6bb6490e6676" />
 
 ```bash
 # 在colab克隆仓库
@@ -168,6 +169,9 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 
 官方 3DGS 在 TensorBoard 中记录的 test PSNR 在 7,000 iter 时约为 13.07 dB，但 30,000 iter 时降至约 4.34 dB。这说明在本数据设置下，后期 densification 和优化可能引入了较多背景区域的高斯 floaters。由于 chair 数据集的 PNG 带 alpha 通道，背景区域的处理方式会对指标造成较大影响；当前官方配置中 `white_background=False`，即使用黑色背景合成。
 
+<img width="480" height="292" alt="animation_edited" src="https://github.com/user-attachments/assets/8d9c4fba-7d88-45bf-bfec-ec03dbbfd474" />
+
+
 ## 训练速度对比
 
 根据当前保存的文件时间戳和官方 TensorBoard 日志，可以得到如下粗略速度统计：
@@ -205,6 +209,4 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 ## 小结
 
 总体来看，官方 3DGS 在算法完整性和工程效率上明显优于本作业的纯 PyTorch 简化版。官方实现借助 CUDA tile-based rasterizer、adaptive densification、球谐颜色和更高效的优化流程，在训练速度和细节表达上具有明显优势。简化版的优势是结构清晰，便于理解 3D Gaussian 初始化、投影、2D Gaussian 计算和 alpha blending 的基本流程，但由于缺少 densification 和高性能 rasterizer，训练速度、显存效率和最终渲染质量都受到限制。
-
-当前报告仍缺少严格的峰值显存数值，以及简化版在相同 test split 上的 PSNR、SSIM、LPIPS 指标。若后续补充这两部分，Task 3 的定量比较会更加完整。
 
