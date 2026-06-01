@@ -174,8 +174,8 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 
 | 方法 | 训练规模 | 训练耗时 | 平均速度 |
 |---|---:|---:|---:|
-| 简化版 PyTorch 3DGS | 200 epochs，约 20,000 次图像更新 | 约 174.7 min | 约 524 ms / update |
-| 官方 3DGS | 30,000 iterations | 约 20.54 min | TensorBoard 最后 100 次约 34.0 ms / iter |
+| 简化版 PyTorch 3DGS | 200 epochs，约 20,000 次图像更新 | 约 174min | 约 524 ms / update |
+| 官方 3DGS | 30,000 iterations | 约 21 min | TensorBoard 最后 100 次约 34.0 ms / iter |
 
 即使官方实现使用了更高图像分辨率，并且最终高斯数量增长到 370,042 个，它的单次迭代速度仍明显快于简化版。这主要来自官方 CUDA rasterizer、tile-based 并行渲染、可见性裁剪和更高效的显存访问。相比之下，简化版使用纯 PyTorch 在图像平面上直接计算高斯贡献，接近对所有高斯和所有像素做全量计算，计算复杂度和中间张量开销都较大。
 
