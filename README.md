@@ -150,19 +150,21 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 | 方法 | PSNR ↑ | SSIM ↑ | LPIPS ↓ |
 |---|---:|---:|---:|
 | 官方 3DGS, 30,000 iter | 4.3386 | 0.2383 | 0.2928 |
-| 简化版 PyTorch 3DGS | 暂未计算 | 暂未计算 | 暂未计算 |
 
 从已有可视化结果看，简化版 PyTorch 3DGS 能够在训练视角上重建出椅子的主体形状、颜色和大致轮廓，但细节较模糊，边缘存在扩散和破碎现象。官方 3DGS 的局部物体细节更丰富，例如椅背、椅腿和绿色纹理保留得更清楚；但当前这次官方实验在背景区域出现了明显的白色或灰色 floaters，导致黑色背景与渲染结果差异很大，因此 PSNR 和 SSIM 被显著拉低。
 
 简化版最终 debug 图：
 
-![Simplified PyTorch 3DGS debug result](data/chair/checkpoints/debug_images/epoch_0199.png)
+[Simplified PyTorch 3DGS debug result](data/chair/checkpoints/debug_images/epoch_0199.png)
+
+<img width="400" height="200" alt="epoch_0199" src="https://github.com/user-attachments/assets/d449c55d-039f-45ed-8c37-fd6414f88ffe" />
+
 
 官方 3DGS 测试视角示例：
 
 | Ground Truth | Official 3DGS Render |
 |---|---|
-| ![Official GT](gaussian-splatting/output/7dc68038-2/test/ours_30000/gt/00000.png) | ![Official render](gaussian-splatting/output/7dc68038-2/test/ours_30000/renders/00000.png) |
+|<img width="400" height="400" alt="00012" src="https://github.com/user-attachments/assets/bdd2c783-4e91-415b-840d-03139a70c17b" />  |<img width="400" height="400" alt="00012" src="https://github.com/user-attachments/assets/4830bd21-3943-4dfd-8cf8-2da3623b3b72" /> |
 
 官方 3DGS 在 TensorBoard 中记录的 test PSNR 在 7,000 iter 时约为 13.07 dB，但 30,000 iter 时降至约 4.34 dB。这说明在本数据设置下，后期 densification 和优化可能引入了较多背景区域的高斯 floaters。由于 chair 数据集的 PNG 带 alpha 通道，背景区域的处理方式会对指标造成较大影响；当前官方配置中 `white_background=False`，即使用黑色背景合成。
 
@@ -174,8 +176,6 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 |---|---:|---:|---:|
 | 简化版 PyTorch 3DGS | 200 epochs，约 20,000 次图像更新 | 约 174.7 min | 约 524 ms / update |
 | 官方 3DGS | 30,000 iterations | 约 20.54 min | TensorBoard 最后 100 次约 34.0 ms / iter |
-
-简化版 PyTorch 3DGS 的训练时间由 `checkpoint_000000.pt` 到 `epoch_0199.png` 的时间戳粗略估计：从 2026-05-29 20:07:02 到 2026-05-29 23:01:44，约 174.7 分钟。官方 3DGS 的训练时间由 TensorBoard 事件中首个和最后一个 `iter_time` 记录估计，约为 20.54 分钟。
 
 即使官方实现使用了更高图像分辨率，并且最终高斯数量增长到 370,042 个，它的单次迭代速度仍明显快于简化版。这主要来自官方 CUDA rasterizer、tile-based 并行渲染、可见性裁剪和更高效的显存访问。相比之下，简化版使用纯 PyTorch 在图像平面上直接计算高斯贡献，接近对所有高斯和所有像素做全量计算，计算复杂度和中间张量开销都较大。
 
