@@ -150,7 +150,7 @@ git clone git@github.com:graphdeco-inria/gaussian-splatting.git --recursive
 
 官方 3DGS 已经完成 `train.py`、`render.py` 和 `metrics.py` 三步，指标文件为 `gaussian-splatting/output/7dc68038-2/results.json`。在 `ours_30000` 下得到的测试集指标如下：
 
-| 方法 | PSNR ↑ | SSIM ↑ | LPIPS ↓ |
+| 方法 | PSNR  | SSIM  | LPIPS  |
 |---|---:|---:|---:|
 | 官方 3DGS, 30,000 iter | 4.3386 | 0.2383 | 0.2928 |
 
